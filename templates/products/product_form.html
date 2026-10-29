@@ -1,0 +1,176 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{% if action == 'create' %}إضافة منتج جديد{% else %}تعديل المنتج{% endif %} — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">
+            <i class="fa-solid fa-{% if action == 'create' %}box-open{% else %}pen-to-square{% endif %} text-info me-2"></i>
+            {% if action == 'create' %}إضافة منتج جديد{% else %}تعديل المنتج: {{ product.name }}{% endif %}
+        </h3>
+        <p class="text-muted mb-0">
+            {% if action == 'create' %}
+                الباركود والـ SKU يتم توليدهما تلقائياً إذا تركتهما فارغين.
+            {% endif %}
+        </p>
+    </div>
+    <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-right me-1"></i> العودة لدليل المنتجات
+    </a>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row g-4">
+
+        <!-- القسم الأيسر: البيانات الأساسية -->
+        <div class="col-lg-8">
+            <div class="card card-alburaq mb-4">
+                <div class="card-alburaq-header">
+                    <i class="fa-solid fa-tag me-2"></i> البيانات الأساسية للمنتج
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">اسم المنتج <span class="text-danger">*</span></label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">التصنيف <span class="text-danger">*</span></label>
+                            {{ form.category }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الحد الأدنى للمخزون (تنبيه النقص)</label>
+                            {{ form.min_stock_level }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">الوصف والتفاصيل الفنية</label>
+                            {{ form.description }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-alburaq mb-4">
+                <div class="card-alburaq-header">
+                    <i class="fa-solid fa-money-bill-trend-up me-2"></i> الأسعار
+                    <small class="opacity-75 me-3">(بالريال السعودي)</small>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">سعر الشراء (التكلفة) <span class="text-danger">*</span></label>
+                            {{ form.cost_price }}
+                            <div class="form-text text-danger"><i class="fa-solid fa-lock fa-xs"></i> لا يظهر للكاشير</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">سعر البيع للمفرق <span class="text-danger">*</span></label>
+                            {{ form.sale_price }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">سعر الجملة</label>
+                            {{ form.wholesale_price }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-alburaq">
+                <div class="card-alburaq-header">
+                    <i class="fa-solid fa-barcode me-2"></i> الباركود والمعرفات
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">رمز الباركود</label>
+                            <div class="input-group">
+                                <input type="text" id="barcodeInput" name="barcode" value="{{ form.barcode.value|default:'' }}"
+                                    class="form-control" placeholder="امسح الباركود أو اتركه للتوليد التلقائي">
+                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('barcodeInput').value=''" title="مسح">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            {% if form.barcode.errors %}<div class="text-danger small mt-1">{{ form.barcode.errors.0 }}</div>{% endif %}
+                            <div class="form-text">اتركه فارغاً لتوليد باركود فريد تلقائياً</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">رمز SKU</label>
+                            {{ form.sku }}
+                            {% if form.sku.errors %}<div class="text-danger small mt-1">{{ form.sku.errors.0 }}</div>{% endif %}
+                            <div class="form-text">اتركه فارغاً لتوليد SKU فريد تلقائياً (ALB-XXXXX)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- القسم الأيمن: الصورة والحالة -->
+        <div class="col-lg-4">
+            <div class="card card-alburaq mb-4">
+                <div class="card-alburaq-header">
+                    <i class="fa-solid fa-image me-2"></i> الصورة الرئيسية
+                </div>
+                <div class="card-body p-4 text-center">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="img-fluid rounded mb-3" style="max-height: 180px; object-fit: contain;">
+                    {% else %}
+                        <div class="bg-light py-4 rounded mb-3 text-muted border">
+                            <i class="fa-solid fa-camera fa-3x opacity-40"></i>
+                        </div>
+                    {% endif %}
+                    {{ form.image }}
+                    <div class="form-text mt-1">صيغ مقبولة: JPG, PNG, WEBP — الحجم الأقصى 5MB</div>
+                </div>
+            </div>
+
+            <div class="card card-alburaq">
+                <div class="card-alburaq-header">
+                    <i class="fa-solid fa-toggle-on me-2"></i> حالة المنتج
+                </div>
+                <div class="card-body p-4">
+                    <div class="form-check form-switch mb-3 p-3 border rounded">
+                        {{ form.is_active }}
+                        <label class="form-check-label fw-bold me-2" for="{{ form.is_active.id_for_label }}">
+                            منتج فعال (متاح للبيع)
+                        </label>
+                    </div>
+                    <div class="form-check form-switch p-3 border rounded bg-light">
+                        {{ form.is_published_web }}
+                        <label class="form-check-label fw-bold me-2" for="{{ form.is_published_web.id_for_label }}">
+                            <i class="fa-solid fa-globe text-info me-1"></i>
+                            نشر على الموقع العام للمحل
+                        </label>
+                    </div>
+                    <div class="alert alert-warning mt-3 mb-0 py-2 small">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                        المنتجات المنشورة تظهر للعامة <strong>بدون</strong> أسعار الشراء أو بيانات المخزون الداخلية.
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-alburaq btn-lg fw-bold">
+                    <i class="fa-solid fa-save me-2"></i> حفظ بيانات المنتج
+                </button>
+                <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">إلغاء</a>
+            </div>
+        </div>
+
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// فتح مربع مسح الباركود بالكيبورد عند الضغط على / لتفعيل مسح الباركود من الـ Scanner
+document.addEventListener('keydown', function(e) {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        document.getElementById('barcodeInput').focus();
+        document.getElementById('barcodeInput').select();
+    }
+});
+</script>
+{% endblock %}

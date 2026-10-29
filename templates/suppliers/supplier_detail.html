@@ -1,0 +1,22 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ supplier.name }} — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div><h3 class="fw-bold mb-1">{{ supplier.name }}</h3><p class="text-muted mb-0">سجل المورد ومعاملاته.</p></div>
+    <div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{% url 'supplier_update' supplier.pk %}"><i class="fa-solid fa-pen me-1"></i>تعديل البيانات</a><a class="btn btn-alburaq" href="{% url 'purchase_create' %}"><i class="fa-solid fa-plus me-1"></i>فاتورة شراء</a>
+        <form method="post" action="{% url 'supplier_toggle_active' supplier.pk %}">{% csrf_token %}<button class="btn {% if supplier.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" type="submit">{% if supplier.is_active %}تعطيل المورد{% else %}تفعيل المورد{% endif %}</button></form>
+    </div>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted">الهاتف</div><strong dir="ltr">{{ supplier.phone|default:'—' }}</strong></div></div>
+    <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted">البريد والعنوان</div><strong>{{ supplier.email|default:'—' }}</strong><div>{{ supplier.address|default:'—' }}</div></div></div>
+    <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted">الرصيد المستحق للمورد</div><strong class="fs-4 {% if supplier.outstanding_balance > 0 %}text-danger{% elif supplier.outstanding_balance < 0 %}text-success{% endif %}">{{ supplier.outstanding_balance }} ر.س</strong></div></div>
+</div>
+<h5 class="fw-bold mb-3">فواتير المشتريات</h5>
+<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-dark"><tr><th>رقم الفاتورة</th><th>رقم المورد</th><th>التاريخ</th><th>الإجمالي المستحق</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th></th></tr></thead><tbody>
+{% for invoice in page_obj %}<tr><td>{{ invoice.invoice_number }}</td><td>{{ invoice.supplier_invoice_number|default:'—' }}</td><td>{{ invoice.invoice_date|date:'Y-m-d' }}</td><td>{{ invoice.total_amount }} ر.س</td><td>{{ invoice.paid_amount }} ر.س</td><td>{{ invoice.remaining_amount }} ر.س</td><td>{{ invoice.get_status_display }}</td><td><a class="btn btn-sm btn-outline-primary" href="{% url 'purchase_detail' invoice.pk %}">التفاصيل</a></td></tr>
+{% empty %}<tr><td colspan="8" class="text-center text-muted py-4">لا توجد فواتير مشتريات لهذا المورد.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

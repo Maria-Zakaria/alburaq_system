@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ SHOP_NAME }} — نظام الإدارة المتكامل{% endblock %}</title>
+    <!-- Bootstrap 5 RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom Al-Buraq CSS -->
+    <link rel="stylesheet" href="/static/css/alburaq_custom.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-alburaq sticky-top">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+                <i class="fa-solid fa-car-rear text-info"></i>
+                <span>{{ SHOP_NAME }}</span>
+            </a>
+            <button class="navbar-toggler text-white border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#alburaqNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="alburaqNavbar">
+                {% if user.is_authenticated %}
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                    <li class="nav-item">
+                        <a class="nav-link text-warning fw-bold" href="{% url 'pos' %}">
+                            <i class="fa-solid fa-cash-register me-1"></i> نقطة البيع (POS)
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-boxes-stacked me-1"></i> المنتجات والمخزون
+                        </a>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item" href="{% url 'product_list' %}"><i class="fa-solid fa-list me-2"></i>دليل المنتجات</a></li>
+                            {% if user.is_superuser or user.role == 'OWNER' or user.role == 'SHIFT_SUPERVISOR' or user.role == 'INVENTORY_CLERK' %}
+                            <li><a class="dropdown-item" href="{% url 'inventory_stock_list' %}"><i class="fa-solid fa-boxes-stacked me-2"></i>أرصدة المخزون</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'product_create' %}"><i class="fa-solid fa-plus me-2"></i>إضافة منتج جديد</a></li>
+                            <li><a class="dropdown-item" href="{% url 'category_list' %}"><i class="fa-solid fa-layer-group me-2"></i>إدارة التصنيفات</a></li>
+                        </ul>
+                    </li>
+                    {% if user.is_superuser or user.role == 'OWNER' or user.role == 'SHIFT_SUPERVISOR' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-truck-ramp-box me-1"></i> الموردون والمشتريات
+                        </a>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item" href="{% url 'supplier_list' %}">الموردون</a></li>
+                            <li><a class="dropdown-item" href="{% url 'purchase_list' %}">فواتير المشتريات</a></li>
+                            <li><a class="dropdown-item" href="{% url 'purchase_create' %}">تسجيل فاتورة شراء</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    {% if user.is_superuser or user.role == 'OWNER' or user.role == 'SHIFT_SUPERVISOR' or user.role == 'CASHIER' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'sale_list' %}">
+                            <i class="fa-solid fa-receipt me-1"></i> فواتير المبيعات
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if user.is_superuser or user.role == 'OWNER' or user.role == 'SHIFT_SUPERVISOR' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'customer_list' %}">
+                            <i class="fa-solid fa-users me-1"></i> العملاء والديون
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fa-solid fa-vault me-1"></i> الصندوق
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fa-solid fa-wrench me-1"></i> الخدمات والأعمال
+                        </a>
+                    </li>
+                    {% if user.is_superuser or user.role == 'OWNER' %}
+                    <li class="nav-item">
+                        <a class="nav-link text-info" href="{% url 'user_list' %}">
+                            <i class="fa-solid fa-users-gear me-1"></i> المستخدمون
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fa-solid fa-chart-line me-1"></i> التقارير
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-secondary p-2">
+                        <i class="fa-solid fa-user-gear me-1"></i> {{ user.get_role_display }}
+                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-navy btn-sm dropdown-toggle text-white fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-circle-user me-1"></i> {{ user.username }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="fa-solid fa-key me-2"></i>تغيير كلمة المرور</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>تسجيل الخروج</a></li>
+                        </ul>
+                    </div>
+                </div>
+                {% else %}
+                <div class="ms-auto">
+                    <a href="{% url 'login' %}" class="btn btn-alburaq btn-sm">
+                        <i class="fa-solid fa-right-to-bracket me-1"></i> تسجيل الدخول
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container-fluid py-4 px-3">
+        {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-white border-top text-center text-muted">
+        <div class="container">
+            <small>© 2026 جميع الحقوق محفوظة — نظام إدارة محل <strong>{{ SHOP_NAME }}</strong> | إصدار النظام v1.0.0</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

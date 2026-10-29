@@ -1,0 +1,31 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}الموردون — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div><h3 class="fw-bold mb-1"><i class="fa-solid fa-truck-field text-info me-2"></i>الموردون</h3><p class="text-muted mb-0">بيانات الموردين وسجل التعاملات.</p></div>
+    <a href="{% url 'supplier_create' %}" class="btn btn-alburaq"><i class="fa-solid fa-plus me-1"></i>إضافة مورد</a>
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-7"><input class="form-control" type="search" name="q" value="{{ query }}" placeholder="اسم المورد أو الهاتف أو البريد"></div>
+    <div class="col-md-3"><select class="form-select" name="status"><option value="active" {% if status == 'active' %}selected{% endif %}>الموردون الفعالون</option><option value="inactive" {% if status == 'inactive' %}selected{% endif %}>الموردون المعطلون</option><option value="all" {% if status == 'all' %}selected{% endif %}>الكل</option></select></div>
+    <div class="col-md-2 d-grid"><button class="btn btn-outline-primary">بحث</button></div>
+</form>
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-dark"><tr><th>المورد</th><th>الهاتف</th><th>البريد</th><th>الحالة</th><th>تاريخ الإضافة</th><th>الإجراءات</th></tr></thead>
+        <tbody>
+        {% for supplier in page_obj %}
+            <tr>
+                <td class="fw-bold">{{ supplier.name }}</td><td dir="ltr">{{ supplier.phone|default:'—' }}</td><td>{{ supplier.email|default:'—' }}</td>
+                <td>{% if supplier.is_active %}<span class="badge bg-success">فعال</span>{% else %}<span class="badge bg-secondary">معطل</span>{% endif %}</td>
+                <td>{{ supplier.created_at|date:'Y-m-d' }}</td>
+                <td class="text-nowrap"><a class="btn btn-sm btn-outline-primary" href="{% url 'supplier_detail' supplier.pk %}" title="التفاصيل"><i class="fa-solid fa-eye"></i></a><a class="btn btn-sm btn-outline-secondary" href="{% url 'supplier_update' supplier.pk %}" title="تعديل"><i class="fa-solid fa-pen"></i></a></td>
+            </tr>
+        {% empty %}<tr><td colspan="6" class="text-center text-muted py-4">لا يوجد موردون مطابقون.</td></tr>{% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if page_obj.has_other_pages %}<nav><ul class="pagination justify-content-center">{% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&status={{ status }}">السابق</a></li>{% endif %}<li class="page-item active"><span class="page-link">{{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span></li>{% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&status={{ status }}">التالي</a></li>{% endif %}</ul></nav>{% endif %}
+{% endblock %}

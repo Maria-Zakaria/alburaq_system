@@ -1,0 +1,76 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{% if action == 'create' %}إضافة مستخدم جديد{% else %}تعديل بيانات المستخدم{% endif %} — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-alburaq">
+            <div class="card-alburaq-header d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fa-solid fa-{% if action == 'create' %}user-plus{% else %}user-pen{% endif %} me-2"></i>
+                    {% if action == 'create' %}إضافة مستخدم جديد لمحل البراق{% else %}تعديل المستخدم: {{ user_obj.username }}{% endif %}
+                </span>
+                <a href="{% url 'user_list' %}" class="btn btn-sm btn-outline-light">عودة بالقائمة</a>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">اسم المستخدم <span class="text-danger">*</span></label>
+                            {{ form.username }}
+                            {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">الدور والصلاحيات <span class="text-danger">*</span></label>
+                            {{ form.role }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">الاسم الأول</label>
+                            {{ form.first_name }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">الاسم الأخير</label>
+                            {{ form.last_name }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">رقم الهاتف</label>
+                            {{ form.phone }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">البريد الإلكتروني</label>
+                            {{ form.email }}
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">{{ form.password.label }}</label>
+                            {{ form.password }}
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <div class="form-check form-switch">
+                                {{ form.is_active }}
+                                <label class="form-check-label fw-bold me-2" for="{{ form.is_active.id_for_label }}">حساب نشط ومخول بالدخول</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'user_list' %}" class="btn btn-secondary px-4">إلغاء</a>
+                        <button type="submit" class="btn btn-alburaq px-4">
+                            <i class="fa-solid fa-save me-1"></i> حفظ البيانات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

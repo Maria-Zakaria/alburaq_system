@@ -1,0 +1,121 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}لوحة التحكم الرئيسية — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-alburaq p-4 bg-navy text-white" style="background: linear-gradient(135deg, #0f172a, #1e293b);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h2 class="fw-bold mb-1"><i class="fa-solid fa-car-rear text-info me-2"></i>نظام إدارة محل {{ SHOP_NAME }}</h2>
+                    <p class="text-light mb-0">{{ SHOP_TAGLINE }} | النظام التشغيلي المتكامل</p>
+                </div>
+                <div>
+                    <span class="badge bg-info text-dark fs-6 px-3 py-2">
+                        <i class="fa-solid fa-circle-check me-1"></i> النظام نشط وجاهز
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card navy">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-receipt fa-2x opacity-75"></i></span>
+                <span class="badge bg-info text-dark">اليوم</span>
+            </div>
+            <div class="stat-value">0.00 ر.س</div>
+            <div class="mt-2 small opacity-75">إجمالي مبيعات اليوم</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card cyan">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-boxes-stacked fa-2x opacity-75"></i></span>
+                <span class="badge bg-light text-dark">المخزون</span>
+            </div>
+            <div class="stat-value">0</div>
+            <div class="mt-2 small opacity-75">إجمالي الأصناف المسجلة</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-vault fa-2x opacity-75"></i></span>
+                <span class="badge bg-light text-dark">الوردية</span>
+            </div>
+            <div class="stat-value">مغلقة</div>
+            <div class="mt-2 small opacity-75">حالة صندوق الوردية الحالية</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-wrench fa-2x opacity-75"></i></span>
+                <span class="badge bg-light text-dark">الخدمات</span>
+            </div>
+            <div class="stat-value">0</div>
+            <div class="mt-2 small opacity-75">طلبات الخدمة قيد التنفيذ</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card card-alburaq mb-4">
+            <div class="card-alburaq-header d-flex align-items-center justify-content-between">
+                <span><i class="fa-solid fa-bolt me-2"></i>الوصول السريع للعمليات التشغيلية</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="#" class="btn btn-navy w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
+                            <i class="fa-solid fa-cash-register fa-2x text-info"></i>
+                            <span class="fw-bold">شاشة نقطة البيع POS</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" class="btn btn-navy w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
+                            <i class="fa-solid fa-box-open fa-2x text-warning"></i>
+                            <span class="fw-bold">إضافة منتج جديد</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" class="btn btn-navy w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2">
+                            <i class="fa-solid fa-truck-field fa-2x text-success"></i>
+                            <span class="fw-bold">فاتورة مشتريات</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-alburaq mb-4">
+            <div class="card-alburaq-header">
+                <span><i class="fa-solid fa-info-circle me-2"></i>بيانات المحل النظامية</span>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush p-0">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">اسم المحل:</span>
+                        <strong class="text-dark">{{ SHOP_NAME }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">لغة النظام:</span>
+                        <strong class="text-dark">العربية (RTL)</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">حالة البيئة:</span>
+                        <span class="badge bg-success">جاهزية كاملة</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

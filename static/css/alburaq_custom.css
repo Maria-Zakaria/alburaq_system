@@ -1,0 +1,154 @@
+/* 
+  الهوية البصرية لنظام إدارة محل البراق 
+  Colors: Dark Navy, White, Cyan, Light Blue, Green, Orange, Red, Gray
+*/
+
+:root {
+  --alburaq-navy-dark: #0f172a;
+  --alburaq-navy: #1e293b;
+  --alburaq-navy-light: #334155;
+  --alburaq-cyan: #06b6d4;
+  --alburaq-cyan-dark: #0891b2;
+  --alburaq-cyan-light: #67e8f9;
+  --alburaq-bg: #f8fafc;
+  --alburaq-card-bg: #ffffff;
+  --alburaq-text: #1e293b;
+  --alburaq-muted: #64748b;
+  --alburaq-success: #10b981;
+  --alburaq-warning: #f59e0b;
+  --alburaq-danger: #ef4444;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  direction: rtl;
+  text-align: right;
+  background-color: var(--alburaq-bg);
+  color: var(--alburaq-text);
+  margin: 0;
+  padding: 0;
+}
+
+/* Navbar */
+.navbar-alburaq {
+  background-color: var(--alburaq-navy-dark);
+  border-bottom: 3px solid var(--alburaq-cyan);
+}
+
+.navbar-alburaq .navbar-brand {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.5px;
+}
+
+.navbar-alburaq .navbar-brand span {
+  color: var(--alburaq-cyan);
+}
+
+.navbar-alburaq .nav-link {
+  color: #e2e8f0;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.navbar-alburaq .nav-link:hover,
+.navbar-alburaq .nav-link.active {
+  color: var(--alburaq-cyan);
+  background-color: rgba(6, 182, 212, 0.1);
+  border-radius: 6px;
+}
+
+/* Buttons */
+.btn-alburaq {
+  background-color: var(--alburaq-cyan);
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-alburaq:hover {
+  background-color: var(--alburaq-cyan-dark);
+  color: #ffffff;
+}
+
+.btn-navy {
+  background-color: var(--alburaq-navy);
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
+}
+
+.btn-navy:hover {
+  background-color: var(--alburaq-navy-dark);
+  color: #ffffff;
+}
+
+/* Cards & Dashboards */
+.card-alburaq {
+  background-color: var(--alburaq-card-bg);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.card-alburaq-header {
+  background-color: var(--alburaq-navy);
+  color: #ffffff;
+  padding: 1rem 1.25rem;
+  border-top-left-radius: 9px;
+  border-top-right-radius: 9px;
+  font-weight: 700;
+}
+
+/* Stat Cards */
+.stat-card {
+  padding: 1.25rem;
+  border-radius: 10px;
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card.navy { background: linear-gradient(135deg, #0f172a, #1e293b); }
+.stat-card.cyan { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+.stat-card.success { background: linear-gradient(135deg, #059669, #10b981); }
+.stat-card.warning { background: linear-gradient(135deg, #d97706, #f59e0b); }
+
+.stat-card .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-top: 0.5rem;
+}
+
+/* POS Container */
+.pos-container {
+  min-height: calc(100vh - 70px);
+  padding: 15px;
+}
+
+.pos-cart {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 2px solid var(--alburaq-navy-light);
+}
+
+.pos-total-box {
+  background: var(--alburaq-navy-dark);
+  color: var(--alburaq-cyan);
+  font-size: 2rem;
+  font-weight: 800;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* RTL Utilities */
+.me-auto-rtl {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}

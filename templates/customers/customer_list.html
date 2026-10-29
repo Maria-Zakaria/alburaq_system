@@ -1,0 +1,21 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}العملاء — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div><h3 class="fw-bold mb-1"><i class="fa-solid fa-users text-info me-2"></i>العملاء</h3><p class="text-muted mb-0">أرصدة العملاء مشتقة من فواتير البيع ومعاملات التحصيل.</p></div>
+    <a href="{% url 'customer_create' %}" class="btn btn-alburaq"><i class="fa-solid fa-user-plus me-1"></i>إضافة عميل</a>
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-7"><input class="form-control" type="search" name="q" value="{{ query }}" placeholder="ابحث بالاسم أو الهاتف أو البريد"></div>
+    <div class="col-md-3"><select name="debt" class="form-select"><option value="">كل العملاء</option><option value="positive" {% if debt_filter == 'positive' %}selected{% endif %}>عليهم رصيد مستحق</option><option value="zero" {% if debt_filter == 'zero' %}selected{% endif %}>دون رصيد مستحق</option></select></div>
+    <div class="col-md-2 d-grid"><button class="btn btn-outline-primary">بحث وتصفية</button></div>
+</form>
+<div class="table-responsive"><table class="table table-hover align-middle">
+    <thead class="table-dark"><tr><th>العميل</th><th>الهاتف</th><th>البريد</th><th>الرصيد المستحق</th><th>تاريخ التسجيل</th><th></th></tr></thead>
+    <tbody>{% for customer in page_obj %}<tr><td class="fw-bold">{{ customer.name }}</td><td dir="ltr">{{ customer.phone|default:'—' }}</td><td>{{ customer.email|default:'—' }}</td><td class="fw-bold {% if customer.calculated_balance > 0 %}text-danger{% endif %}">{{ customer.calculated_balance|floatformat:'2u' }} ر.س</td><td>{{ customer.created_at|date:'Y-m-d' }}</td><td><a class="btn btn-sm btn-outline-primary" href="{% url 'customer_detail' customer.pk %}">التفاصيل</a></td></tr>
+    {% empty %}<tr><td colspan="6" class="text-center text-muted py-4">لا يوجد عملاء مطابقون.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% if page_obj.has_other_pages %}<nav aria-label="صفحات العملاء"><ul class="pagination justify-content-center">{% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&debt={{ debt_filter }}">السابق</a></li>{% endif %}<li class="page-item active"><span class="page-link">{{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span></li>{% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&debt={{ debt_filter }}">التالي</a></li>{% endif %}</ul></nav>{% endif %}
+{% endblock %}

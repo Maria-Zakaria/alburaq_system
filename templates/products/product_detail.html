@@ -1,0 +1,99 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ product.name }} — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card card-alburaq p-3 text-center">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="img-fluid rounded mb-3" style="max-height: 250px; object-fit: contain;">
+            {% else %}
+                <div class="bg-light py-5 rounded mb-3 text-muted">
+                    <i class="fa-solid fa-image fa-4x opacity-50"></i>
+                    <p class="mt-2 mb-0">لا توجد صورة للمنتج</p>
+                </div>
+            {% endif %}
+            <div class="p-3 bg-light rounded border mb-3">
+                <small class="text-muted d-block mb-1">رمز الباركود المسجل</small>
+                <code class="fs-4 text-primary fw-bold">{{ product.barcode }}</code>
+                <div class="mt-2">
+                    <a href="{% url 'barcode_label_print' product.pk %}" target="_blank" class="btn btn-sm btn-outline-dark">
+                        <i class="fa-solid fa-print me-1"></i> طباعة ملصق الباركود
+                    </a>
+                </div>
+            </div>
+            <div class="d-grid gap-2">
+                {% if can_manage_products %}
+                <a href="{% url 'product_update' product.pk %}" class="btn btn-alburaq fw-bold"><i class="fa-solid fa-pen-to-square me-1"></i> تعديل بيانات المنتج</a>
+                <form method="post" action="{% url 'product_toggle_web' product.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-info w-100">
+                        {% if product.is_published_web %}إلغاء النشر من الموقع العام{% else %}نشر المنتج في الموقع العام{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card card-alburaq">
+            <div class="card-alburaq-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 text-white fw-bold">{{ product.name }}</h4>
+                <span class="badge bg-info text-dark fs-6">{{ product.category.name }}</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded bg-light">
+                            <small class="text-muted d-block">سعر البيع الأساسي</small>
+                            <span class="fs-3 fw-bold text-success">{{ product.sale_price }} ر.س</span>
+                        </div>
+                    </div>
+                    {% if can_view_cost %}
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded bg-light">
+                            <small class="text-muted d-block">سعر الشراء (التكلفة)</small>
+                            <span class="fs-3 fw-bold text-navy">{{ product.cost_price }} ر.س</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded bg-light">
+                            <small class="text-muted d-block">رصيد المخزون الفعلي</small>
+                            <span class="fs-3 fw-bold {% if total_stock <= product.min_stock_level %}text-danger{% else %}text-primary{% endif %}">
+                                {{ total_stock }} قطعة
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fa-solid fa-list-check me-2"></i>المواصفات والبيانات</h5>
+                <table class="table table-striped">
+                    <tr>
+                        <td class="fw-bold" style="width: 30%;">رمز SKU:</td>
+                        <td><code>{{ product.sku }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">سعر البيع بالجملة:</td>
+                        <td>{{ product.wholesale_price }} ر.س</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">الحد الأدنى للمخزون:</td>
+                        <td>{{ product.min_stock_level }} قطعة</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">حالة المنتج:</td>
+                        <td>{% if product.is_active %}<span class="badge bg-success">فعال ومتاح للبيع</span>{% else %}<span class="badge bg-danger">معطل</span>{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">الوصف والتفاصيل:</td>
+                        <td>{{ product.description|default:"لا يوجد وصف إضافي" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}تسجيل الدخول — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center py-5">
+    <div class="col-md-5 col-lg-4">
+        <div class="card card-alburaq shadow-lg border-0">
+            <div class="card-alburaq-header text-center py-4 bg-navy">
+                <div class="mb-2">
+                    <i class="fa-solid fa-car-rear fa-3x text-info"></i>
+                </div>
+                <h3 class="fw-bold mb-1 text-white">{{ SHOP_NAME }}</h3>
+                <small class="text-light opacity-75">نظام الإدارة المتكامل ومبيعات السيارات</small>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold"><i class="fa-solid fa-user me-1"></i>اسم المستخدم</label>
+                        {{ form.username }}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold"><i class="fa-solid fa-lock me-1"></i>كلمة المرور</label>
+                        {{ form.password }}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-alburaq btn-lg w-100 py-3 fw-bold">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i>دخول النظام
+                    </button>
+                </form>
+            </div>
+            <div class="card-footer bg-light text-center py-3">
+                <small class="text-muted">نظام حقيقي قابل للاستخدام المحاسبي — محل {{ SHOP_NAME }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

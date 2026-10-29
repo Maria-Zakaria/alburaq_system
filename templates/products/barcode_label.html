@@ -1,0 +1,94 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}طباعة ملصق الباركود — {{ product.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        body * { visibility: hidden; }
+        .print-area, .print-area * { visibility: visible; }
+        .print-area { position: fixed; top: 0; left: 0; width: 100%; }
+        .no-print { display: none !important; }
+        .label-card { page-break-inside: avoid; }
+    }
+    .label-card {
+        width: 80mm;
+        padding: 6px 8px;
+        border: 1px dashed #ccc;
+        margin: 4px;
+        display: inline-block;
+        text-align: center;
+        background: white;
+        font-family: 'Courier New', monospace;
+    }
+    .label-shop-name {
+        font-size: 11pt;
+        font-weight: bold;
+        color: #0f172a;
+        letter-spacing: 1px;
+    }
+    .label-product-name {
+        font-size: 8pt;
+        color: #334155;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    .label-price {
+        font-size: 14pt;
+        font-weight: 900;
+        color: #0891b2;
+    }
+    .label-barcode-text {
+        font-size: 10pt;
+        letter-spacing: 3px;
+        font-family: 'Courier New', monospace;
+        color: #1e293b;
+    }
+    .barcode-bars {
+        font-family: 'Libre Barcode 128', monospace;
+        font-size: 42pt;
+        line-height: 1;
+        color: #000;
+    }
+</style>
+<!-- Google Fonts Barcode Font -->
+<link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="no-print d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="fa-solid fa-barcode text-info me-2"></i>طباعة ملصق الباركود</h3>
+        <p class="text-muted mb-0">{{ product.name }} — {{ quantity|length }} ملصق</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        <label class="me-2 fw-bold">عدد الملصقات:</label>
+        <select onchange="window.location='?qty='+this.value" class="form-select" style="width:100px">
+            {% for n in "12345678910"|make_list %}
+                <option value="{{ forloop.counter }}" {% if forloop.counter == quantity|length %}selected{% endif %}>{{ forloop.counter }}</option>
+            {% endfor %}
+        </select>
+        <button onclick="window.print()" class="btn btn-alburaq fw-bold px-4">
+            <i class="fa-solid fa-print me-2"></i> طباعة الملصقات
+        </button>
+        <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline-secondary">رجوع</a>
+    </div>
+</div>
+
+<div class="print-area">
+    {% for i in quantity %}
+    <div class="label-card">
+        <div class="label-shop-name">⚡ البراق ⚡</div>
+        <div class="label-product-name">{{ product.name }}</div>
+        <div class="barcode-bars">{{ product.barcode }}</div>
+        <div class="label-barcode-text">{{ product.barcode }}</div>
+        <div class="label-price">{{ product.sale_price }} ر.س</div>
+        {% if product.sku %}
+        <div style="font-size:7pt;color:#64748b;">SKU: {{ product.sku }}</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

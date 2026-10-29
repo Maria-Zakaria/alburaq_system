@@ -1,0 +1,25 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}فاتورة {{ invoice.invoice_number }} — {{ SHOP_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .receipt { max-width: 80mm; margin: 0 auto; color: #111; font: 12px/1.5 Arial, sans-serif; }
+    .receipt h1, .receipt p { text-align: center; margin: 2px 0; }
+    .receipt table { width: 100%; border-collapse: collapse; }
+    .receipt th, .receipt td { padding: 3px 1px; border-bottom: 1px dashed #888; text-align: right; }
+    .receipt .amount { text-align: left; white-space: nowrap; }
+    .receipt-total { font-size: 16px; font-weight: bold; }
+    @media print { body * { visibility: hidden; } .receipt, .receipt * { visibility: visible; } .receipt { position: absolute; top: 0; right: 0; width: 80mm; max-width: 80mm; } .no-print { display: none !important; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="no-print d-flex justify-content-center gap-2 mb-3"><button class="btn btn-alburaq" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>طباعة الفاتورة</button><a class="btn btn-outline-secondary" href="{% url 'sale_detail' invoice.pk %}">عودة للتفاصيل</a></div>
+<article class="receipt">
+    <h1>{{ SHOP_NAME }}</h1><p>{{ SHOP_TAGLINE }}</p><p>{{ SHOP_PHONE }}</p><hr>
+    <p>فاتورة: {{ invoice.invoice_number }}</p><p>{{ invoice.created_at|date:'Y-m-d H:i' }}</p><p>الكاشير: {{ invoice.cashier }}</p>{% if invoice.customer %}<p>العميل: {{ invoice.customer.name }}</p>{% endif %}<hr>
+    <table><thead><tr><th>الصنف</th><th>كمية</th><th class="amount">الإجمالي</th></tr></thead><tbody>{% for item in items %}<tr><td>{% if item.product %}{{ item.product.name }}{% else %}{{ item.service_name }}{% endif %}<br><small>{{ item.historical_sale_price|floatformat:'2u' }} × {{ item.quantity }}{% if item.discount %} · خصم {{ item.discount|floatformat:'2u' }}{% endif %}</small></td><td>{{ item.quantity }}</td><td class="amount">{{ item.total_price|floatformat:'2u' }}</td></tr>{% endfor %}</tbody></table>
+    <hr><p>المجموع الفرعي <span class="amount">{{ invoice.subtotal|floatformat:'2u' }} ر.س</span></p><p>الخصم <span class="amount">{{ invoice.discount_amount|floatformat:'2u' }} ر.س</span></p><p class="receipt-total">الإجمالي <span class="amount">{{ invoice.total_amount|floatformat:'2u' }} ر.س</span></p><p>المدفوع <span class="amount">{{ invoice.paid_amount|floatformat:'2u' }} ر.س</span></p><p>المتبقي <span class="amount">{{ invoice.remaining_amount|floatformat:'2u' }} ر.س</span></p><p>الباقي للعميل <span class="amount">{{ invoice.change_given|floatformat:'2u' }} ر.س</span></p><hr><p>شكرًا لتعاملكم مع البراق</p>
+</article>
+{% endblock %}

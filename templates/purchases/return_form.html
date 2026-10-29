@@ -1,0 +1,41 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}مرتجع مشتريات — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h3 class="fw-bold mb-1">مرتجع للمورد</h3><p class="text-muted mb-0">الفاتورة الأصلية {{ invoice.invoice_number }} · {{ invoice.supplier.name }}</p></div><a class="btn btn-outline-secondary" href="{% url 'purchase_detail' invoice.pk %}">عودة للفاتورة</a></div>
+<form method="post">{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="row g-4"><div class="col-lg-5"><label class="form-label fw-bold" for="{{ form.reason.id_for_label }}">{{ form.reason.label }}</label>{{ form.reason }}{% for error in form.reason.errors %}<div class="small text-danger">{{ error }}</div>{% endfor %}</div>
+    <div class="col-lg-7"><div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold mb-0">الأصناف المرتجعة</h5><button type="button" id="add-line" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-plus me-1"></i>إضافة صنف</button></div>
+        {{ item_formset.management_form }}{% if item_formset.non_form_errors %}<div class="alert alert-danger">{{ item_formset.non_form_errors }}</div>{% endif %}
+        <div id="return-lines">{% for line in item_formset %}<div class="row g-2 align-items-end return-line mb-3">{% for hidden in line.hidden_fields %}{{ hidden }}{% endfor %}{% for field in line.visible_fields %}<div class="col-md-5"><label class="form-label small fw-bold">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="small text-danger">{{ error }}</div>{% endfor %}</div>{% endfor %}<div class="col-md-2"><button class="btn btn-outline-danger remove-line w-100" type="button" title="إزالة السطر"><i class="fa-solid fa-trash"></i></button></div></div>{% endfor %}</div>
+        <template id="empty-line">{% with line=item_formset.empty_form %}<div class="row g-2 align-items-end return-line mb-3">{% for field in line.visible_fields %}<div class="col-md-5"><label class="form-label small fw-bold">{{ field.label }}</label>{{ field }}</div>{% endfor %}<div class="col-md-2"><button class="btn btn-outline-danger remove-line w-100" type="button" title="إزالة السطر"><i class="fa-solid fa-trash"></i></button></div></div>{% endwith %}</template>
+    </div></div>
+    <div class="col-12 alert alert-warning mb-0">لا يمكن إرجاع كمية تتجاوز الكمية المستلمة بعد احتساب المرتجعات السابقة، ويجب أن تكون البضاعة متوفرة بالمخزون.</div></div>
+    <div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-outline-secondary" href="{% url 'purchase_detail' invoice.pk %}">إلغاء</a><button class="btn btn-danger" type="submit">اعتماد المرتجع</button></div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const addLineButton = document.getElementById('add-line');
+const linesContainer = document.getElementById('return-lines');
+const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+const emptyLineTemplate = document.getElementById('empty-line');
+
+addLineButton.addEventListener('click', () => {
+    const index = Number(totalForms.value);
+    const row = document.createElement('div');
+    row.innerHTML = emptyLineTemplate.innerHTML.replaceAll('__prefix__', index);
+    linesContainer.append(row.firstElementChild);
+    totalForms.value = index + 1;
+});
+
+linesContainer.addEventListener('click', (event) => {
+    const button = event.target.closest('.remove-line');
+    if (button && linesContainer.querySelectorAll('.return-line').length > 1) {
+        button.closest('.return-line').remove();
+    }
+});
+</script>
+{% endblock %}

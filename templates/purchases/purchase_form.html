@@ -1,0 +1,53 @@
+    <div class="alert alert-info mt-3 mb-0">يسجل النظام المدفوع كمعاملة مالية مستقلة. يتطلب الدفع النقدي وجود وردية صندوق مفتوحة واحدة؛ أما الشبكة والتحويل فيسجلان بمرجعهما.</div>
+{% extends 'layouts/base.html' %}
+
+{% block title %}تسجيل فاتورة شراء — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h3 class="fw-bold mb-1">تسجيل فاتورة شراء</h3><p class="text-muted mb-0">اعتماد الفاتورة يسجل الاستلام والمخزون في عملية واحدة.</p></div><a class="btn btn-outline-secondary" href="{% url 'purchase_list' %}">عودة</a></div>
+<form method="post">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="row g-4">
+        <div class="col-lg-5"><section class="border rounded p-3 h-100"><h5 class="fw-bold mb-3">بيانات المورد والفاتورة</h5>
+            {% for field in form %}<div class="mb-3"><label class="form-label fw-bold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="small text-danger">{{ error }}</div>{% endfor %}</div>{% endfor %}
+        </section></div>
+        <div class="col-lg-7"><section class="border rounded p-3"><div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold mb-0">بنود الشراء</h5><button type="button" id="add-line" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-plus me-1"></i>إضافة بند</button></div>
+            {{ item_formset.management_form }}
+            {% if item_formset.non_form_errors %}<div class="alert alert-danger">{{ item_formset.non_form_errors }}</div>{% endif %}
+            <div id="purchase-lines">{% for line in item_formset %}<div class="row g-2 align-items-end purchase-line mb-3">
+                {% for hidden in line.hidden_fields %}{{ hidden }}{% endfor %}
+                {% for field in line.visible_fields %}<div class="col-md-5"><label class="form-label small fw-bold">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="small text-danger">{{ error }}</div>{% endfor %}</div>{% endfor %}
+                <div class="col-md-2"><button type="button" class="btn btn-outline-danger remove-line w-100" title="إزالة البند"><i class="fa-solid fa-trash"></i></button></div>
+            </div>{% endfor %}</div>
+            <template id="empty-line">{% with line=item_formset.empty_form %}<div class="row g-2 align-items-end purchase-line mb-3">{% for field in line.visible_fields %}<div class="col-md-5"><label class="form-label small fw-bold">{{ field.label }}</label>{{ field }}</div>{% endfor %}<div class="col-md-2"><button type="button" class="btn btn-outline-danger remove-line w-100" title="إزالة البند"><i class="fa-solid fa-trash"></i></button></div></div>{% endwith %}</template>
+        </section>
+        <div class="alert alert-info mt-3 mb-0">يسجل النظام قيمة الفاتورة صافيًا بعد الخصم والضريبة. تسجيل المدفوعات النقدية أو البنكية سيتم عبر دفتر المدفوعات في المرحلة التاسعة.</div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-4"><a href="{% url 'purchase_list' %}" class="btn btn-outline-secondary">إلغاء</a><button class="btn btn-alburaq fw-bold" type="submit"><i class="fa-solid fa-check me-1"></i>اعتماد واستلام الأصناف</button></div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const addLineButton = document.getElementById('add-line');
+const linesContainer = document.getElementById('purchase-lines');
+const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+const emptyLineTemplate = document.getElementById('empty-line');
+
+addLineButton.addEventListener('click', () => {
+    const index = Number(totalForms.value);
+    const row = document.createElement('div');
+    row.innerHTML = emptyLineTemplate.innerHTML.replaceAll('__prefix__', index);
+    linesContainer.append(row.firstElementChild);
+    totalForms.value = index + 1;
+});
+
+linesContainer.addEventListener('click', (event) => {
+    const button = event.target.closest('.remove-line');
+    if (button && linesContainer.querySelectorAll('.purchase-line').length > 1) {
+        button.closest('.purchase-line').remove();
+    }
+});
+</script>
+{% endblock %}

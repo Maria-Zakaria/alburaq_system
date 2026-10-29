@@ -1,0 +1,41 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}حركة مخزون {{ product.name }} — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">سجل مخزون: {{ product.name }}</h3>
+        <p class="text-muted mb-0">الرصيد الحالي: <strong>{{ stock_quantity }}</strong> قطعة</p>
+    </div>
+    <a href="{% url 'inventory_product_movement_create' product.pk %}" class="btn btn-alburaq"><i class="fa-solid fa-plus me-1"></i> تسجيل حركة</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle text-center">
+        <thead class="table-dark"><tr><th>التاريخ</th><th>نوع الحركة</th><th>الكمية</th><th>المرجع</th><th>المستخدم</th><th>السبب / الملاحظات</th></tr></thead>
+        <tbody>
+        {% for movement in page_obj %}
+            <tr>
+                <td>{{ movement.created_at|date:'Y-m-d H:i' }}</td>
+                <td>{{ movement.get_movement_type_display }}</td>
+                <td class="fw-bold {% if movement.quantity < 0 %}text-danger{% else %}text-success{% endif %}">{{ movement.quantity|stringformat:'+d' }}</td>
+                <td>{{ movement.reference|default:'—' }}</td>
+                <td>{{ movement.user|default:'—' }}</td>
+                <td>{{ movement.notes|default:'—' }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6" class="py-4 text-muted">لا توجد حركات مسجلة لهذا المنتج.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="صفحات الحركات"><ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابق</a></li>{% endif %}
+    <li class="page-item active"><span class="page-link">{{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">التالي</a></li>{% endif %}
+</ul></nav>
+{% endif %}
+{% endblock %}

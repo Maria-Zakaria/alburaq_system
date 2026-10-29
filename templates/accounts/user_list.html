@@ -1,0 +1,83 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}إدارة المستخدمين والصلاحيات — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="fa-solid fa-users-gear text-info me-2"></i>إدارة المستخدمين والصلاحيات</h3>
+        <p class="text-muted mb-0">إضافة وتعديل أدوار مستخدمي نظام محل {{ SHOP_NAME }}</p>
+    </div>
+    <a href="{% url 'user_create' %}" class="btn btn-alburaq fw-bold">
+        <i class="fa-solid fa-user-plus me-1"></i> إضافة مستخدم جديد
+    </a>
+</div>
+
+<div class="card card-alburaq">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>اسم المستخدم</th>
+                        <th>الاسم الكامل</th>
+                        <th>الدور / الصلاحية</th>
+                        <th>رقم الهاتف</th>
+                        <th>الحالة</th>
+                        <th>تاريخ الإنشاء</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u.id }}</td>
+                        <td class="fw-bold">{{ u.username }}</td>
+                        <td>{{ u.get_full_name|default:"—" }}</td>
+                        <td>
+                            {% if u.role == 'OWNER' %}
+                                <span class="badge bg-danger p-2"><i class="fa-solid fa-user-shield me-1"></i>{{ u.get_role_display }}</span>
+                            {% elif u.role == 'SHIFT_SUPERVISOR' %}
+                                <span class="badge bg-warning text-dark p-2"><i class="fa-solid fa-user-check me-1"></i>{{ u.get_role_display }}</span>
+                            {% elif u.role == 'CASHIER' %}
+                                <span class="badge bg-info text-dark p-2"><i class="fa-solid fa-cash-register me-1"></i>{{ u.get_role_display }}</span>
+                            {% elif u.role == 'INVENTORY_CLERK' %}
+                                <span class="badge bg-primary p-2"><i class="fa-solid fa-boxes-stacked me-1"></i>{{ u.get_role_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary p-2"><i class="fa-solid fa-wrench me-1"></i>{{ u.get_role_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.phone|default:"—" }}</td>
+                        <td>
+                            {% if u.is_active %}
+                                <span class="badge bg-success">نشط</span>
+                            {% else %}
+                                <span class="badge bg-danger">معطل</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'user_update' u.pk %}" class="btn btn-outline-primary" title="تعديل">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                {% if u.pk != user.pk %}
+                                <a href="{% url 'user_toggle_status' u.pk %}" class="btn btn-outline-{% if u.is_active %}warning{% else %}success{% endif %}" title="{% if u.is_active %}تعطيل{% else %}تفعيل{% endif %}">
+                                    <i class="fa-solid fa-{% if u.is_active %}ban{% else %}check{% endif %}"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="py-4 text-muted">لا يوجد مستخدمون مسجلون حالياً.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

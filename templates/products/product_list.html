@@ -1,0 +1,133 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}دليل المنتجات والباركود — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="fa-solid fa-boxes-stacked text-info me-2"></i>دليل المنتجات والباركود</h3>
+        <p class="text-muted mb-0">إدارة مخزون ومبيعات إكسسوارات وزينة السيارات لمحل {{ SHOP_NAME }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if can_manage_categories %}
+        <a href="{% url 'category_list' %}" class="btn btn-navy fw-bold">
+            <i class="fa-solid fa-layer-group me-1"></i> إدارة التصنيفات
+        </a>
+        {% endif %}
+        {% if can_manage_products %}
+        <a href="{% url 'product_create' %}" class="btn btn-alburaq fw-bold">
+            <i class="fa-solid fa-plus me-1"></i> إضافة منتج جديد
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card card-alburaq mb-4 p-3 bg-light">
+    <form method="get" class="row g-3 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" name="q" value="{{ query }}" class="form-control form-control-lg" placeholder="ابحث باسم المنتج، الباركود، SKU، أو الوصف...">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select name="category" class="form-select form-select-lg">
+                <option value="">جميع التصنيفات</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-alburaq btn-lg w-100 fw-bold">تصفية وبحث</button>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-secondary btn-lg" title="إعادة تعيين"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="card card-alburaq">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>المنتج</th>
+                        <th>التصنيف</th>
+                        <th>الباركود / SKU</th>
+                        <th>سعر البيع</th>
+                        {% if can_view_cost %}
+                        <th>سعر الشراء</th>
+                        {% endif %}
+                        <th>رصيد المخزون</th>
+                        <th>حالة النشر</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in page_obj %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td class="text-start">
+                            <a href="{% url 'product_detail' p.pk %}" class="fw-bold text-decoration-none text-navy">
+                                {{ p.name }}
+                            </a>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ p.category.name }}</span></td>
+                        <td>
+                            <code class="fs-6 text-primary fw-bold">{{ p.barcode|default:p.sku }}</code>
+                        </td>
+                        <td class="fw-bold text-success fs-6">{{ p.sale_price }} ر.س</td>
+                        {% if can_view_cost %}
+                        <td class="text-muted fs-6">{{ p.cost_price }} ر.س</td>
+                        {% endif %}
+                        <td>
+                            {% if p.current_stock_calculated is None or p.current_stock_calculated <= 0 %}
+                                <span class="badge bg-danger p-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>نافذ (0)</span>
+                            {% elif p.current_stock_calculated <= p.min_stock_level %}
+                                <span class="badge bg-warning text-dark p-2"><i class="fa-solid fa-exclamation-circle me-1"></i>منخفض ({{ p.current_stock_calculated }})</span>
+                            {% else %}
+                                <span class="badge bg-success p-2">{{ p.current_stock_calculated }} قطعة</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.is_published_web %}
+                                <span class="badge bg-info text-dark">منشور بالموقع</span>
+                            {% else %}
+                                <span class="badge bg-secondary">داخلي فقط</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'product_detail' p.pk %}" class="btn btn-outline-info" title="التفاصيل"><i class="fa-solid fa-eye"></i></a>
+                                {% if can_manage_products %}<a href="{% url 'product_update' p.pk %}" class="btn btn-outline-primary" title="تعديل"><i class="fa-solid fa-pen-to-square"></i></a>{% endif %}
+                                <a href="{% url 'barcode_label_print' p.pk %}" class="btn btn-outline-dark" title="طباعة باركود" target="_blank"><i class="fa-solid fa-barcode"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="py-5 text-muted">لم يتم العثور على أي منتجات مطابقة لشرط البحث.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer bg-white d-flex justify-content-center py-3">
+        <nav>
+            <ul class="pagination mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&category={{ category_id }}">السابق</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&category={{ category_id }}">التالي</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

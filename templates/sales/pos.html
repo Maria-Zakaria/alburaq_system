@@ -1,0 +1,288 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}نقطة البيع — {{ SHOP_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pos-shell { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(330px, .85fr); gap: 1rem; align-items: start; }
+    .pos-panel { min-width: 0; background: #fff; border: 1px solid #d9e2ea; border-radius: 6px; }
+    .pos-results { max-height: 270px; overflow: auto; }
+    .pos-result { cursor: pointer; }
+    .pos-result:hover, .pos-result:focus { background: #eaf8fc; }
+    .pos-table-wrap { max-height: 48vh; overflow: auto; }
+    .pos-summary { position: sticky; top: 82px; }
+    .pos-number { font-variant-numeric: tabular-nums; direction: ltr; display: inline-block; }
+    @media (max-width: 900px) { .pos-shell { grid-template-columns: 1fr; } .pos-summary { position: static; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <div><h3 class="fw-bold mb-0"><i class="fa-solid fa-cash-register text-info me-2"></i>نقطة البيع</h3><small class="text-muted">البراق · بيع المنتجات والخدمات</small></div>
+    <a href="{% url 'sale_list' %}" class="btn btn-outline-secondary"><i class="fa-solid fa-receipt me-1"></i>الفواتير</a>
+</div>
+
+<form method="post" id="pos-form" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="items_json" id="items-json">
+    <input type="hidden" name="tenders_json" id="tenders-json">
+    <input type="hidden" name="idempotency_key" value="{{ initial_idempotency_key }}">
+    <div class="pos-shell">
+        <section class="pos-panel p-3">
+            <div class="mb-3">
+                <label for="product-search" class="form-label fw-bold">بحث المنتج أو مسح الباركود</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                    <input id="product-search" class="form-control" autocomplete="off" autofocus placeholder="الاسم، SKU أو Barcode">
+                    <button class="btn btn-outline-secondary" type="button" id="clear-search" title="مسح البحث"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="product-results" class="list-group pos-results mt-1" role="listbox"></div>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-end gap-2 border-top pt-3 mb-3">
+                <div class="flex-grow-1"><label class="form-label fw-bold" for="service-name">إضافة خدمة يدوية</label><input id="service-name" class="form-control" maxlength="200" placeholder="مثال: تركيب إضاءة"></div>
+                <div><label class="form-label fw-bold" for="service-price">السعر</label><input id="service-price" class="form-control" type="number" min="0" step="0.01" value="0.00" style="max-width:150px"></div>
+                <button class="btn btn-outline-primary" type="button" id="add-service"><i class="fa-solid fa-plus me-1"></i>إضافة خدمة</button>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-2"><h5 class="fw-bold mb-0">السلة</h5><button type="button" id="clear-cart" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash me-1"></i>إفراغ السلة</button></div>
+            <div class="table-responsive pos-table-wrap">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th>الصنف</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th></th></tr></thead>
+                    <tbody id="cart-rows"><tr><td colspan="5" class="text-center text-muted py-4">ابدأ بمسح باركود أو البحث عن منتج.</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <aside class="pos-panel pos-summary p-3">
+            <h5 class="fw-bold mb-3">إتمام البيع</h5>
+            <div class="mb-3 position-relative">
+                <label class="form-label fw-bold" for="customer-search">العميل <small class="text-muted">(مطلوب إذا بقي دين)</small></label>
+                <input id="customer-search" class="form-control" autocomplete="off" placeholder="ابحث بالاسم أو الهاتف">
+                <input type="hidden" name="customer_id" id="customer-id" value="{{ initial_customer_id }}">
+                <div id="customer-selected" class="small text-success mt-1">{% if selected_customer %}العميل المحدد: {{ selected_customer.name }}{% endif %}</div>
+                <div id="customer-results" class="list-group pos-results position-absolute w-100" style="z-index:5"></div>
+            </div>
+
+            {% if can_discount %}<div class="mb-3"><label class="form-label fw-bold" for="discount-amount">الخصم</label><input class="form-control" type="number" min="0" step="0.01" name="discount_amount" id="discount-amount" value="{{ initial_discount }}"></div>{% else %}<input type="hidden" name="discount_amount" id="discount-amount" value="0.00">{% endif %}
+
+            <div class="d-flex justify-content-between border-top pt-2"><span>المجموع الفرعي</span><strong class="pos-number" id="subtotal">0.00</strong></div>
+            <div class="d-flex justify-content-between py-1"><span>الخصم</span><strong class="pos-number" id="discount-display">0.00</strong></div>
+            <div class="d-flex justify-content-between border-top py-2 fs-5"><span class="fw-bold">الإجمالي</span><strong class="pos-number text-primary" id="total">0.00</strong></div>
+
+            <div class="border-top pt-3 mt-2">
+                <div class="d-flex justify-content-between align-items-center mb-2"><h6 class="fw-bold mb-0">الدفعات</h6><button type="button" class="btn btn-sm btn-outline-primary" id="add-tender"><i class="fa-solid fa-plus"></i></button></div>
+                <div id="tender-rows"></div>
+                <template id="tender-template"><div class="row g-1 align-items-end tender-row mb-2">
+                    <div class="col-5"><label class="small">الطريقة</label><select class="form-select form-select-sm tender-method"><option value="CASH">نقدًا</option><option value="CARD_NETWORK">شبكة</option><option value="TRANSFER">تحويل</option></select></div>
+                    <div class="col-4"><label class="small">المبلغ</label><input class="form-control form-control-sm tender-amount" type="number" min="0" step="0.01"></div>
+                    <div class="col-3"><button type="button" class="btn btn-sm btn-outline-danger remove-tender w-100" title="إزالة"><i class="fa-solid fa-trash"></i></button></div>
+                    <div class="col-12"><input class="form-control form-control-sm tender-reference" maxlength="100" placeholder="مرجع العملية (اختياري)"></div>
+                </div></template>
+            </div>
+            <div id="cash-received-wrap" class="mb-2 d-none"><label class="form-label small fw-bold" for="cash-received">النقد المستلم من العميل</label><input class="form-control" type="number" min="0" step="0.01" id="cash-received" name="cash_received" value="{{ initial_cash_received }}"></div>
+            <div class="d-flex justify-content-between py-1"><span>المبلغ المدفوع</span><strong class="pos-number" id="paid-total">0.00</strong></div>
+            <div class="d-flex justify-content-between py-1"><span>المتبقي</span><strong class="pos-number text-danger" id="due-total">0.00</strong></div>
+            <div class="d-flex justify-content-between border-top pt-2"><span>الباقي للعميل</span><strong class="pos-number text-success" id="change-total">0.00</strong></div>
+            <div class="mt-3"><label class="form-label fw-bold" for="sale-notes">ملاحظات</label><textarea class="form-control" rows="2" name="notes" id="sale-notes">{{ initial_notes }}</textarea></div>
+            <button type="submit" id="complete-sale" class="btn btn-alburaq btn-lg w-100 fw-bold mt-3"><i class="fa-solid fa-check me-2"></i>إتمام البيع</button>
+            <div class="small text-muted mt-2">البيع النقدي يتطلب وردية صندوق مفتوحة واحدة.</div>
+        </aside>
+    </div>
+</form>
+{{ initial_lines|json_script:'initial-sale-lines' }}
+{{ initial_tenders|json_script:'initial-sale-tenders' }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const productSearch = document.getElementById('product-search');
+const productResults = document.getElementById('product-results');
+const customerSearch = document.getElementById('customer-search');
+const customerResults = document.getElementById('customer-results');
+const cartRows = document.getElementById('cart-rows');
+const tenderRows = document.getElementById('tender-rows');
+const itemsInput = document.getElementById('items-json');
+const tendersInput = document.getElementById('tenders-json');
+const cart = JSON.parse(document.getElementById('initial-sale-lines').textContent || '[]');
+const restoredTenders = JSON.parse(document.getElementById('initial-sale-tenders').textContent || '[]');
+const invoiceTotal = () => Math.max(0, Number(document.getElementById('subtotal').textContent) - Number(document.getElementById('discount-display').textContent));
+let selectedCustomerId = '';
+let searchTimer;
+
+function makeButton(label, className, onClick) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = className;
+    button.textContent = label;
+    button.addEventListener('click', onClick);
+    return button;
+}
+
+function renderCart() {
+    cartRows.replaceChildren();
+    if (!cart.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 5;
+        cell.className = 'text-center text-muted py-4';
+        cell.textContent = 'السلة فارغة.';
+        row.append(cell);
+        cartRows.append(row);
+    }
+    for (const [index, item] of cart.entries()) {
+        const row = document.createElement('tr');
+        const name = document.createElement('td');
+        name.textContent = item.name || item.service_name;
+        const quantityCell = document.createElement('td');
+        const quantity = document.createElement('input');
+        quantity.type = 'number'; quantity.min = '1'; quantity.step = '1'; quantity.value = item.quantity;
+        quantity.className = 'form-control form-control-sm'; quantity.style.width = '76px';
+        quantity.addEventListener('change', () => { item.quantity = Math.max(1, Number(quantity.value) || 1); renderCart(); });
+        quantityCell.append(quantity);
+        const price = document.createElement('td'); price.className = 'pos-number'; price.textContent = Number(item.unit_price ?? item.sale_price).toFixed(2);
+        const lineTotal = document.createElement('td'); lineTotal.className = 'pos-number'; lineTotal.textContent = (Number(item.unit_price ?? item.sale_price) * item.quantity).toFixed(2);
+        const action = document.createElement('td');
+        action.append(makeButton('حذف', 'btn btn-sm btn-outline-danger', () => { cart.splice(index, 1); renderCart(); }));
+        row.append(name, quantityCell, price, lineTotal, action);
+        cartRows.append(row);
+    }
+    const subtotal = cart.reduce((sum, item) => sum + Number(item.unit_price ?? item.sale_price) * item.quantity, 0);
+    const discountInput = document.getElementById('discount-amount');
+    const discount = Math.min(subtotal, Math.max(0, Number(discountInput.value) || 0));
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+    document.getElementById('discount-display').textContent = discount.toFixed(2);
+    document.getElementById('total').textContent = (subtotal - discount).toFixed(2);
+    renderTenderTotals();
+}
+
+function renderTenderTotals() {
+    const rows = [...tenderRows.querySelectorAll('.tender-row')];
+    const tenders = rows.map(row => ({
+        method: row.querySelector('.tender-method').value,
+        amount: Number(row.querySelector('.tender-amount').value || 0),
+        reference: row.querySelector('.tender-reference').value.trim(),
+    })).filter(tender => tender.amount > 0);
+    const paid = tenders.reduce((sum, tender) => sum + tender.amount, 0);
+    const total = invoiceTotal();
+    document.getElementById('paid-total').textContent = paid.toFixed(2);
+    document.getElementById('due-total').textContent = Math.max(0, total - paid).toFixed(2);
+    const cash = tenders.find(tender => tender.method === 'CASH');
+    const cashWrap = document.getElementById('cash-received-wrap');
+    cashWrap.classList.toggle('d-none', !cash);
+    if (cash && !document.getElementById('cash-received').value) {
+        document.getElementById('cash-received').value = cash.amount.toFixed(2);
+    }
+    const received = cash ? Number(document.getElementById('cash-received').value || cash.amount) : 0;
+    document.getElementById('change-total').textContent = Math.max(0, received - (cash?.amount || 0)).toFixed(2);
+    itemsInput.value = JSON.stringify(cart.map(item => item.product_id
+        ? {product_id: item.product_id, quantity: item.quantity}
+        : {service_name: item.service_name, unit_price: item.unit_price, quantity: item.quantity}));
+    tendersInput.value = JSON.stringify(tenders);
+}
+
+function addProduct(product) {
+    const existing = cart.find(item => item.product_id === product.id);
+    if (existing) existing.quantity += 1;
+    else cart.push({...product, product_id: product.id, unit_price: Number(product.sale_price), quantity: 1});
+    productResults.replaceChildren();
+    productSearch.value = '';
+    productSearch.focus();
+    renderCart();
+}
+
+function showProducts(results) {
+    productResults.replaceChildren();
+    for (const product of results) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'list-group-item list-group-item-action pos-result d-flex justify-content-between';
+        const title = document.createElement('span'); title.textContent = `${product.name} · ${product.barcode || product.sku}`;
+        const price = document.createElement('strong'); price.textContent = `${Number(product.sale_price).toFixed(2)} ر.س · متوفر ${product.stock}`;
+        button.append(title, price); button.addEventListener('click', () => addProduct(product)); productResults.append(button);
+    }
+}
+
+productSearch.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(async () => {
+        const query = productSearch.value.trim();
+        if (query.length < 2) { productResults.replaceChildren(); return; }
+        const response = await fetch(`{% url 'pos_product_search' %}?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        showProducts(data.results || []);
+    }, 120);
+});
+productSearch.addEventListener('keydown', async event => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const response = await fetch(`{% url 'pos_product_search' %}?q=${encodeURIComponent(productSearch.value.trim())}`);
+    const data = await response.json();
+    if (data.results?.length === 1 || (data.results?.length && data.results[0].barcode === productSearch.value.trim())) addProduct(data.results[0]);
+});
+document.getElementById('clear-search').addEventListener('click', () => { productSearch.value = ''; productResults.replaceChildren(); productSearch.focus(); });
+
+document.getElementById('add-service').addEventListener('click', () => {
+    const serviceName = document.getElementById('service-name').value.trim();
+    const unitPrice = Number(document.getElementById('service-price').value);
+    if (!serviceName || !Number.isFinite(unitPrice) || unitPrice < 0) return;
+    cart.push({service_name: serviceName, unit_price: unitPrice, quantity: 1});
+    document.getElementById('service-name').value = '';
+    renderCart();
+});
+document.getElementById('clear-cart').addEventListener('click', () => { cart.splice(0); renderCart(); });
+document.getElementById('discount-amount').addEventListener('input', renderCart);
+
+function addTender(data = {}) {
+    const fragment = document.getElementById('tender-template').content.cloneNode(true);
+    const row = fragment.querySelector('.tender-row');
+    row.querySelector('.tender-method').value = data.method || 'CASH';
+    row.querySelector('.tender-amount').value = data.amount ?? '';
+    row.querySelector('.tender-reference').value = data.reference || '';
+    row.addEventListener('input', renderTenderTotals);
+    row.addEventListener('change', renderTenderTotals);
+    row.querySelector('.remove-tender').addEventListener('click', () => { row.remove(); renderTenderTotals(); });
+    tenderRows.append(fragment);
+    renderTenderTotals();
+}
+document.getElementById('add-tender').addEventListener('click', () => addTender());
+document.getElementById('cash-received').addEventListener('input', renderTenderTotals);
+for (const tender of restoredTenders) addTender(tender);
+if (!restoredTenders.length) addTender();
+
+customerSearch.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    selectedCustomerId = '';
+    document.getElementById('customer-id').value = '';
+    document.getElementById('customer-selected').textContent = '';
+    searchTimer = setTimeout(async () => {
+        const query = customerSearch.value.trim();
+        if (query.length < 2) { customerResults.replaceChildren(); return; }
+        const response = await fetch(`{% url 'pos_customer_search' %}?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        customerResults.replaceChildren();
+        for (const customer of data.results || []) {
+            const button = document.createElement('button'); button.type = 'button'; button.className = 'list-group-item list-group-item-action';
+            button.textContent = `${customer.name}${customer.phone ? ` · ${customer.phone}` : ''}`;
+            button.addEventListener('click', () => {
+                selectedCustomerId = customer.id;
+                document.getElementById('customer-id').value = customer.id;
+                document.getElementById('customer-selected').textContent = `العميل المحدد: ${customer.name}`;
+                customerResults.replaceChildren(); customerSearch.value = '';
+            });
+            customerResults.append(button);
+        }
+    }, 150);
+});
+
+document.getElementById('pos-form').addEventListener('submit', event => {
+    renderTenderTotals();
+    if (!cart.length) { event.preventDefault(); alert('أضف منتجًا أو خدمة قبل إتمام البيع.'); return; }
+    const paid = JSON.parse(tendersInput.value).reduce((sum, tender) => sum + tender.amount, 0);
+    if (paid < invoiceTotal() && !document.getElementById('customer-id').value) {
+        event.preventDefault(); alert('اختر العميل لتسجيل المبلغ المتبقي كدين.'); customerSearch.focus();
+    }
+});
+
+renderCart();
+</script>
+{% endblock %}

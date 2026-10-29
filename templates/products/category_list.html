@@ -1,0 +1,99 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}إدارة التصنيفات — {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card card-alburaq">
+            <div class="card-alburaq-header">
+                    <i class="fa-solid fa-folder-plus me-2"></i>
+                    {% if editing_category %}تعديل تصنيف{% else %}إضافة تصنيف جديد{% endif %}
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% if editing_category %}{% url 'category_update' editing_category.pk %}{% else %}{% url 'category_list' %}{% endif %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">اسم التصنيف <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الوصف</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label fw-bold me-2" for="{{ form.is_active.id_for_label }}">تصنيف نشط</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-alburaq w-100 fw-bold">
+                        <i class="fa-solid fa-save me-1"></i>
+                        {% if editing_category %}حفظ التعديلات{% else %}حفظ التصنيف{% endif %}
+                    </button>
+                    {% if editing_category %}
+                    <a href="{% url 'category_list' %}" class="btn btn-outline-secondary w-100 mt-2">إلغاء التعديل</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card card-alburaq">
+            <div class="card-alburaq-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-layer-group me-2"></i>قائمة التصنيفات الحالية</span>
+                <span class="badge bg-info text-dark">{{ categories.count }} تصنيف</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 text-center">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>اسم التصنيف</th>
+                                <th>عدد المنتجات</th>
+                                <th>الوصف</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in categories %}
+                            <tr>
+                                <td>{{ cat.id }}</td>
+                                <td class="fw-bold text-navy">{{ cat.name }}</td>
+                                <td><span class="badge bg-secondary">{{ cat.products.count }} منتج</span></td>
+                                <td>{{ cat.description|default:"—" }}</td>
+                                <td>
+                                    {% if cat.is_active %}
+                                        <span class="badge bg-success">نشط</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">غير نشط</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-nowrap">
+                                    <a href="{% url 'category_update' cat.pk %}" class="btn btn-sm btn-outline-primary" title="تعديل التصنيف">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'category_toggle_active' cat.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm {% if cat.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="{% if cat.is_active %}تعطيل التصنيف{% else %}تفعيل التصنيف{% endif %}">
+                                            <i class="fa-solid fa-{% if cat.is_active %}ban{% else %}check{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="py-4 text-muted">لا توجد تصنيفات مضافة حتى الآن.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
